@@ -47,6 +47,7 @@ package com.adobe.webapis.awss3
 		public static const OBJECT_DELETED:String     = "objectDeleted";
 		public static const OBJECT_SAVED:String       = "objectSaved";
 		public static const OBJECT_RETRIEVED:String   = "objectRetrieved";
+		public static const REQUEST_FORBIDDEN:String  = "requestForbidden";
 
 		public var data:*;
 

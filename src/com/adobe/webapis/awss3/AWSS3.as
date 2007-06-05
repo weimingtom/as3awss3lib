@@ -168,11 +168,6 @@ package com.adobe.webapis.awss3
 						ae.data = "This bucket name is not unique. Bucket names must be unique across all of S3.";
 						dispatchEvent(ae);
 					}
-					else
-					{
-						ae = new AWSS3Event(AWSS3Event.ERROR);
-						dispatchEvent(ae);						
-					}
 				});
 			var req:URLRequest = getURLRequest("PUT", "/" + escape(bucketName));			
 			stream.load(req);			
@@ -196,11 +191,6 @@ package com.adobe.webapis.awss3
 						ae.data = "Only empty buckets can be deleted.";
 						dispatchEvent(ae);
 					}
-					else
-					{
-						ae = new AWSS3Event(AWSS3Event.ERROR);
-						dispatchEvent(ae);						
-					}
 				});
 			var req:URLRequest = getURLRequest("DELETE", "/" + escape(bucketName));			
 			stream.load(req);			
@@ -218,11 +208,6 @@ package com.adobe.webapis.awss3
 						ae = new AWSS3Event(AWSS3Event.OBJECT_DELETED);
 						dispatchEvent(ae);
 					}
-					else
-					{
-						ae = new AWSS3Event(AWSS3Event.ERROR);
-						dispatchEvent(ae);						
-					}
 				});
 			var req:URLRequest = getURLRequest("DELETE", "/" + escape(bucketName) + "/" + escape(objectName));
 			stream.load(req);			
@@ -230,7 +215,6 @@ package com.adobe.webapis.awss3
 
 		public function saveObject(bucketName:String, objectName:String, contentType:String, objectFile:File):void
 		{
-			trace(objectFile.toString());
 			objectFile.addEventListener(ProgressEvent.PROGRESS,
 				function (e:ProgressEvent):void
 				{
@@ -261,12 +245,6 @@ package com.adobe.webapis.awss3
 			stream.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS,
 				function(e:HTTPStatusEvent):void
 				{
-					if (e.status != 200)
-					{
-						var ae:AWSS3Event;
-						ae = new AWSS3Event(AWSS3Event.ERROR);
-						dispatchEvent(ae);
-					}
 					for each (var h:URLRequestHeader in e.responseHeaders)
 					{
 						// Can get other headers like ETag and Content-Length to add to the S3Object...
@@ -307,6 +285,20 @@ package com.adobe.webapis.awss3
 		{
 			var stream:URLStream = new URLStream();
 			stream.addEventListener(IOErrorEvent.IO_ERROR, onError);
+			stream.addEventListener(HTTPStatusEvent.HTTP_STATUS,
+				function(e:HTTPStatusEvent):void
+				{
+					if (e.status == 403)
+					{
+						var ae:AWSS3Event = new AWSS3Event(AWSS3Event.REQUEST_FORBIDDEN);
+						dispatchEvent(ae);
+					}
+					else if (e.status > 299 && e.status != 409)
+					{
+						ae = new AWSS3Event(AWSS3Event.ERROR);
+						dispatchEvent(ae);						
+					}
+				});
 			return stream;
 		}
 
