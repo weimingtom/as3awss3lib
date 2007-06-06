@@ -118,7 +118,7 @@ package com.adobe.webapis.awss3
 					ae.data = buckets;
 					dispatchEvent(ae);
 				});
-			var req:URLRequest = getURLRequest("GET", "/");			
+			var req:URLRequest = getURLRequest("GET", "/");
 			stream.load(req);			
 		}
 
@@ -288,14 +288,20 @@ package com.adobe.webapis.awss3
 			stream.addEventListener(HTTPStatusEvent.HTTP_STATUS,
 				function(e:HTTPStatusEvent):void
 				{
+					var message:String;
+					var ae:AWSS3Event;
 					if (e.status == 403)
 					{
-						var ae:AWSS3Event = new AWSS3Event(AWSS3Event.REQUEST_FORBIDDEN);
+						ae = new AWSS3Event(AWSS3Event.REQUEST_FORBIDDEN);
+						message = getMessage(getDataFromStream(e.target as URLStream));
+						if (message != null) ae.data = message;
 						dispatchEvent(ae);
 					}
 					else if (e.status > 299 && e.status != 409)
 					{
 						ae = new AWSS3Event(AWSS3Event.ERROR);
+						message = getMessage(getDataFromStream(e.target as URLStream));
+						if (message != null) ae.data = message;
 						dispatchEvent(ae);						
 					}
 				});
@@ -307,6 +313,17 @@ package com.adobe.webapis.awss3
 			var bytes:ByteArray = new ByteArray();
 			stream.readBytes(bytes);
 			return bytes;
+		}
+		
+		private function getMessage(data:ByteArray):String
+		{
+			var xmlData:XML = new XML(data);
+			var message:String = xmlData.Message;
+			if (message != null && message.length > 0)
+			{
+				return message;
+			}
+			return null;
 		}
 
 		private function getURLRequest(method:String, resource:String, contentType:String = null, hash:String = null, secure:Boolean = true):URLRequest
