@@ -54,6 +54,8 @@ package com.adobe.webapis.awss3
 	import mx.formatters.DateFormatter;
 	import flash.filesystem.File;
 	import flash.events.DataEvent;
+	// TBD: Remove import below. Temporary work around for Windows URLRequest bug.
+	import flash.system.Capabilities;
 
 	[Event(name="error",           type="com.adobe.aws.AWSS3Event")]
 	[Event(name="listBuckets",     type="com.adobe.aws.AWSS3Event")]
@@ -330,6 +332,14 @@ package com.adobe.webapis.awss3
 		{
 			var protocol:String = (secure) ? "https" : "http";
 			var req:URLRequest = new URLRequest(protocol + "://" + AMAZON_ENDPOINT + resource);
+
+			// TBD: Remove.  Temporary work-around for Windows URLRequest bug.
+			if (contentType == null && Capabilities.os.indexOf("Windows") != -1)
+			{
+				contentType = "application/x-www-form-urlencoded";
+				req.requestHeaders.push(new URLRequestHeader("Content-Type", "application/x-www-form-urlencoded"));
+			}
+
 			req.shouldCacheResponse = false;
 			req.useCache = false;
 			req.method = method;
