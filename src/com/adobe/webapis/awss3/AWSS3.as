@@ -332,14 +332,6 @@ package com.adobe.webapis.awss3
 		{
 			var protocol:String = (secure) ? "https" : "http";
 			var req:URLRequest = new URLRequest(protocol + "://" + AMAZON_ENDPOINT + resource);
-
-			// TBD: Remove.  Temporary work-around for Windows URLRequest bug.
-			if (contentType == null && Capabilities.os.indexOf("Windows") != -1)
-			{
-				contentType = "application/x-www-form-urlencoded";
-				req.requestHeaders.push(new URLRequestHeader("Content-Type", "application/x-www-form-urlencoded"));
-			}
-
 			req.shouldCacheResponse = false;
 			req.useCache = false;
 			req.method = method;
