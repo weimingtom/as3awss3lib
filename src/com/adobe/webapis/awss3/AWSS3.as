@@ -34,28 +34,23 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.adobe.webapis.awss3
 {
-	import flash.net.URLLoaderDataFormat;
-	import flash.net.URLRequest;
-	import flash.net.URLLoader;
-	import flash.net.URLStream;
-	import flash.events.Event;
-	import flash.events.IOErrorEvent;
-	import flash.events.EventDispatcher;
-	import flash.net.URLRequestHeader;
 	import com.adobe.utils.DateUtil;
-	import flash.utils.ByteArray;
-	import flash.events.ProgressEvent;
-	import flash.net.FileReference;
-	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.crypto.hash.HMAC;
 	import com.hurlant.crypto.hash.MD5;
 	import com.hurlant.util.Base64;
+	
+	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.HTTPStatusEvent;
-	import mx.formatters.DateFormatter;
+	import flash.events.IOErrorEvent;
+	import flash.events.ProgressEvent;
 	import flash.filesystem.File;
-	import flash.events.DataEvent;
-	// TBD: Remove import below. Temporary work around for Windows URLRequest bug.
-	import flash.system.Capabilities;
+	import flash.net.URLRequest;
+	import flash.net.URLRequestHeader;
+	import flash.net.URLStream;
+	import flash.utils.ByteArray;
+	
+	import mx.formatters.DateFormatter;
 
 	[Event(name="error",           type="com.adobe.aws.AWSS3Event")]
 	[Event(name="listBuckets",     type="com.adobe.aws.AWSS3Event")]
@@ -78,6 +73,7 @@ package com.adobe.webapis.awss3
 		private static const AMAZON_ENDPOINT:String = "s3.amazonaws.com";
 		private var hmac:HMAC;
 		private var md5:MD5;
+		private var httpResponseCode:uint;
 
 		public function AWSS3(accessKey:String, secretAccessKey:String)
 		{
@@ -93,6 +89,8 @@ package com.adobe.webapis.awss3
 			// Hash and encryption tools
 			md5 = new MD5();
 			hmac = new HMAC(new com.hurlant.crypto.hash.SHA1());
+			
+			this.httpResponseCode = 0;
 		}
 		
 		public function setCredentials(accessKey:String, secretAccessKey:String):void
@@ -285,27 +283,34 @@ package com.adobe.webapis.awss3
 
 		private function getURLStream():URLStream
 		{
+			this.httpResponseCode = 0;
 			var stream:URLStream = new URLStream();
 			stream.addEventListener(IOErrorEvent.IO_ERROR, onError);
-			stream.addEventListener(HTTPStatusEvent.HTTP_STATUS,
-				function(e:HTTPStatusEvent):void
+			stream.addEventListener(Event.COMPLETE,
+				function(e:Event):void
 				{
 					var message:String;
 					var ae:AWSS3Event;
-					if (e.status == 403)
+					if (httpResponseCode == 403)
 					{
 						ae = new AWSS3Event(AWSS3Event.REQUEST_FORBIDDEN);
 						message = getMessage(getDataFromStream(e.target as URLStream));
 						if (message != null) ae.data = message;
 						dispatchEvent(ae);
 					}
-					else if (e.status > 299 && e.status != 409)
+					else if (httpResponseCode != 0 && httpResponseCode > 299 && httpResponseCode != 409)
 					{
 						ae = new AWSS3Event(AWSS3Event.ERROR);
 						message = getMessage(getDataFromStream(e.target as URLStream));
 						if (message != null) ae.data = message;
 						dispatchEvent(ae);						
 					}
+				});
+
+			stream.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS,
+				function(e:HTTPStatusEvent):void
+				{
+					httpResponseCode = e.status;
 				});
 			return stream;
 		}
