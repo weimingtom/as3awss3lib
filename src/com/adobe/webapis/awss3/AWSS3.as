@@ -230,7 +230,7 @@ package com.adobe.webapis.awss3
 			objectFile.addEventListener(IOErrorEvent.IO_ERROR, onError);
 			var req:URLRequest = getURLRequest("PUT", "/" + escape(bucketName) + "/" + escape(objectName), contentType);
 			if (contentType != null) req.requestHeaders.push(new URLRequestHeader("Content-Type", contentType));
-			objectFile.upload(req);
+			objectFile.uploadUnencoded(req);
 		}
 
 		public function getObject(bucketName:String, objectName:String):void
@@ -337,7 +337,7 @@ package com.adobe.webapis.awss3
 		{
 			var protocol:String = (secure) ? "https" : "http";
 			var req:URLRequest = new URLRequest(protocol + "://" + AMAZON_ENDPOINT + resource);
-			req.shouldCacheResponse = false;
+			req.cacheResponse = false;
 			req.useCache = false;
 			req.method = method;
 			var dateString:String = getDateString(new Date());
