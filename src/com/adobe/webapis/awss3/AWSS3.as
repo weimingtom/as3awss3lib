@@ -229,7 +229,7 @@ package com.adobe.webapis.awss3
 
 			objectFile.addEventListener(IOErrorEvent.IO_ERROR, onError);
 			var req:URLRequest = getURLRequest("PUT", "/" + escape(bucketName) + "/" + escape(objectName), contentType);
-			if (contentType != null) req.requestHeaders.push(new URLRequestHeader("Content-Type", contentType));
+			if (contentType != null) req.requestHeaders.push(new URLRequestHeader("Content-Type", contentType));			
 			objectFile.uploadUnencoded(req);
 		}
 
